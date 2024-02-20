@@ -76,6 +76,10 @@ class PlayerController extends ChangeNotifier {
   Stream<void> get onCompletion =>
       PlatformStreams.instance.onCompletion.filter(playerKey);
 
+  ReleaseMode _releaseMode = ReleaseMode.release;
+
+  ReleaseMode get releaseMode => _releaseMode;
+
   PlayerController() {
     if (!PlatformStreams.instance.isInitialised) {
       PlatformStreams.instance.init();
@@ -182,13 +186,12 @@ class PlayerController extends ChangeNotifier {
   /// See also:
   /// * [FinishMode]
   Future<void> startPlayer({
-    FinishMode finishMode = FinishMode.stop,
     bool forceRefresh = true,
   }) async {
     if (_playerState == PlayerState.initialized ||
         _playerState == PlayerState.paused) {
       final isStarted = await AudioWaveformsInterface.instance
-          .startPlayer(playerKey, finishMode);
+          .startPlayer(playerKey);
       if (isStarted) {
         _setPlayerState(PlayerState.playing);
       } else {
@@ -258,6 +261,14 @@ class PlayerController extends ChangeNotifier {
     if (_playerState == PlayerState.playing) {
       await AudioWaveformsInterface.instance.seekTo(playerKey, progress);
     }
+  }
+
+  ///Set the release Mode.
+  ///
+  /// Check[ReleaseMode]'s doc to understand the difference between the modes.
+  Future<void> setReleaseMode(ReleaseMode  releaseMode)async{
+    _releaseMode = releaseMode;
+    return AudioWaveformsInterface.instance.setReleaseMode(playerKey, releaseMode);
   }
 
   /// Release any resources taken by this controller. Disposing this
