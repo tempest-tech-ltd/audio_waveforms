@@ -7,13 +7,13 @@ class AudioPlayer: NSObject, AVAudioPlayerDelegate {
     private var stopWhenCompleted = false
     private var timer: Timer?
     private var player: AVAudioPlayer?
-    private var releaseMode:ReleaseMode = ReleaseMode.release
+    private var finishMode: FinishMode = FinishMode.release
     private var updateFrequency = UpdateFrequency.low
     var plugin: SwiftAudioWaveformsPlugin
     var playerKey: String
     var flutterChannel: FlutterMethodChannel
     
-
+    
     init(plugin: SwiftAudioWaveformsPlugin, playerKey: String, channel: FlutterMethodChannel) {
         self.plugin = plugin
         self.playerKey = playerKey
@@ -45,7 +45,7 @@ class AudioPlayer: NSObject, AVAudioPlayerDelegate {
         var finishType = 2
         var releaseType = 0
         
-        switch self.releaseMode{
+        switch self.finishMode{
         case .release:
             self.player?.stop()
             stopListening()
@@ -75,7 +75,7 @@ class AudioPlayer: NSObject, AVAudioPlayerDelegate {
         startListening()
         result(true)
     }
-
+    
     
     func pausePlayer(result: @escaping FlutterResult) {
         stopListening()
@@ -121,11 +121,11 @@ class AudioPlayer: NSObject, AVAudioPlayerDelegate {
     
     func setReleaseMode(result : @escaping FlutterResult, releaseType : Int?){
         if(releaseType != nil && releaseType == 0){
-            self.releaseMode = ReleaseMode.release
+            self.finishMode = FinishMode.release
         }else if(releaseType != nil && releaseType == 1){
-            self.releaseMode = ReleaseMode.loop
+            self.finishMode = FinishMode.loop
         }else{
-            self.releaseMode = ReleaseMode.pause
+            self.finishMode = FinishMode.pause
         }
     }
     
