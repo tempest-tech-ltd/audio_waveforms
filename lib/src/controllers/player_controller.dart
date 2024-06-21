@@ -74,6 +74,19 @@ class PlayerController extends ChangeNotifier {
   Stream<void> get onCompletion =>
       PlatformStreams.instance.onCompletion.filter(playerKey);
 
+  /// A stream that outputs any drag event on the AudioFileWaveforms widget
+  Stream<int> get onSeekToDragged => _onSeekToController.stream;
+
+  /// Adds a duration in milliseconds when the user drags the player
+  /// and updates the [currentDuration] Stream
+  void addDragSeekTo(int duration) {
+    _onSeekToController.add(duration);
+    final identifier = PlayerIdentifier<int>(playerKey, duration);
+    PlatformStreams.instance.addCurrentDurationEvent(identifier);
+  }
+
+  final _onSeekToController = StreamController<int>.broadcast();
+
   PlayerController() {
     if (!PlatformStreams.instance.isInitialised) {
       PlatformStreams.instance.init();
@@ -150,7 +163,7 @@ class PlayerController extends ChangeNotifier {
   ///
   /// This function will decode whole audio file and will calculate RMS
   /// according to provided number of samples. So it may take a while to fully
-  /// decode audio file, specifically on android.
+  /// decode audio ffile, specifically on android.
   ///
   /// For example, an audio file of 58 min and about 18 MB of size took about
   /// 4 minutes to decode on android while the same file took about 6-7 seconds
@@ -263,7 +276,11 @@ class PlayerController extends ChangeNotifier {
   /// otherwise nothing happens.
   Future<void> seekTo(int progress) async {
     if (progress < 0) return;
-    if (_playerState == PlayerState.playing || _playerState == PlayerState.paused || _playerState == PlayerState.initialized) {
+    final identifier = PlayerIdentifier<int>(playerKey, progress);
+    PlatformStreams.instance.addCurrentDurationEvent(identifier);
+    if (_playerState == PlayerState.playing ||
+        _playerState == PlayerState.paused ||
+        _playerState == PlayerState.initialized) {
       await AudioWaveformsInterface.instance.seekTo(playerKey, progress);
     }
   }
@@ -283,6 +300,7 @@ class PlayerController extends ChangeNotifier {
       PlatformStreams.instance.dispose();
     }
     _isDisposed = true;
+    _onSeekToController.close();
     super.dispose();
   }
 
